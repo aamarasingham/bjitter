@@ -1,4 +1,4 @@
-% Matlab code to make Figure 3 for “Basic jitter can hallucinate temporal structure” (Platkiewicz, Stark, Amarasingham)
+% Matlab code to make Figure 4 for "Spike-centered jitter can mistake temporal structure" (Platkiewicz, Stark, Amarasingham)
 % Illustrates non-uniformity of randomized p-values induced by Poisson approximation.
 % (C) Asohan Amarasingham, 6/5/2016
 
@@ -51,7 +51,6 @@ title('(c) Exact p-values (Binomial)')
 
 
 subplot(2,2,4)
-%hist(pvalb_rand,nbins)
 histogram(pvalb_rand,0:binw:1,'Normalization','probability')
 hold on
 plot(0:.005:1,binw*ones( size(0:.005:1)),'r-.') % randomized binomial exact pvalues

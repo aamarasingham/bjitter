@@ -1,13 +1,19 @@
-% Matlab code to make Figure 2 for "Spike-centered jitter can mistake temporal structure" (Platkiewicz, Stark, Amarasingham)
+% Matlab code to make Figure 2 for “Spike-centered jitter can mistake temporal structure” (Platkiewicz, Stark, Amarasingham)
 % Generates Poisson spike trains and compares "p-value" distributions
 % for interval vs. basic (spike-centered) jitter, using a synchrony
-% statistic. Refer to manuscript for details.
+% statistic. Synchronies are injected to demonstrate sensitivity differences between basic and interval jitter. 
+% Refer to manuscript for details.
 % (C) Asohan Amarasingham, 6/5/2016
 
-function []=jitt_demo
+function []=Appendix_Section_5_3
 
-frate1=20; % neuron 1 firing in Hz
-frate2=20; % neuron 2 firing in Hz
+synch_rate=10; % synchrony process firing in Hz
+syn_jitter=.01;  % jitter radius for the synchrony process
+			     % synchrony process is generated and then superposed onto the individual spike processes
+				 % after injecting a little jitter
+frate1=20-synch_rate; % neuron 1 firing in Hz
+frate2=20-synch_rate; % neuron 2 firing in Hz
+
 T=1;  % end time in seconds
 synch_def=.03;   % spikes x,y synchronous if |x-y|<synch_def in secs
 synch_range=[0 1]; % only count synch in this range (ie all synch spikes in neuron 1 \in synch_range)
@@ -26,14 +32,25 @@ for ccc=1:num_runs
    orig_syn=0; 
     
     % sample Poisson by sampling exponential ISI's
-    % neuron 1
+
+	% synchrony process
+	ISIS_avg=1/synch_rate;  % ISI mean rate
+	syn=[ exprnd(ISIS_avg) ];
+	while syn(end) < T, syn(end+1)=syn(end) + exprnd(ISIS_avg); end; syn=syn(1:end-1);
+
+    % neuron 1 (base)
     ISI1_avg=1/frate1;  % ISI mean rate
     n1=[ exprnd(ISI1_avg) ];
     while n1(end) < T, n1(end+1)=n1(end) + exprnd(ISI1_avg); end; n1=n1(1:end-1);
-    % neuron 2
+
+    % neuron 2 (base)
     ISI2_avg=1/frate2;  % ISI mean rate
     n2=[ exprnd(ISI2_avg) ];
     while n2(end) < T, n2(end+1)=n2(end) + exprnd(ISI2_avg); end; n2=n2(1:end-1);
+
+	% superpose synchrony process with n1 and n2
+	n1=[ n1 syn+syn_jitter*rand(1,length(syn)) ];
+	n2=[ n2 syn+syn_jitter*rand(1,length(syn)) ];
 
     % compute synchrony
     
@@ -91,24 +108,18 @@ for ccc=1:num_runs
     if mod(ccc,200)==0
         orig_syn,ccc
         binw=.01;
-        subplot(3,2,1)
-        hold off, histogram(pval,0:binw:1,'Normalization','probability'), title('p(X,R) basic jitter')
-        hold on, plot(0:.005:1,binw*ones( size(0:.005:1)),'r-.')  % draw line
-        subplot(3,2,3)
-        hold off, histogram(pvalr,0:binw:1,'Normalization','probability'), title('p_C(X,R) basic jitter')
-        hold on, plot(0:.005:1,binw*ones( size(0:.005:1)),'r-.')  % draw line
-        subplot(3,2,2)
-        hold off, histogram(pval_int,0:binw:1,'Normalization','probability'), title('p(X,R) interval jitter')
-        hold on, plot(0:.005:1,binw*ones( size(0:.005:1)),'r-.')  % draw line
-        subplot(3,2,4)
-        hold off, histogram(pvalr_int,0:binw:1,'Normalization','probability'), title('p_C(X,R) interval jitter')
-        hold on, plot(0:.005:1,binw*ones( size(0:.005:1)),'r-.')  % draw line
-       
-        subplot(3,2,5)
-        hold off, histogram(u(1:ccc),0:binw:1,'Normalization','probability'), title('Uniform')
-        hold on, plot(0:.005:1,binw*ones( size(0:.005:1)),'r-.')  % draw line
-        pause(.001)
-        
+        subplot(2,2,1)
+        hold off, cdfplot(pval), title('p(X,R) basic jitter')
+        hold on, plot(0:.005:1,0:.005:1,'r-.')
+        subplot(2,2,3)
+        hold off, cdfplot(pvalr), title('p_C(X,R) basic jitter')  
+        hold on, plot(0:.005:1,0:.005:1,'r-.')
+        subplot(2,2,2)
+        hold off, cdfplot(pval_int), title('p(X,R) interval jitter')
+        hold on, plot(0:.005:1,0:.005:1,'r-.') 
+        subplot(2,2,4)
+        hold off, cdfplot(pvalr_int), title('p_C(X,R) interval jitter') 
+        hold on, plot(0:.005:1,0:.005:1,'r-.')
     end
                 
 end
